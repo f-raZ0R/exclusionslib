@@ -1,4 +1,4 @@
-package athebyne.exclusions_lib.predicates;
+package net.athebyne.exclusions_lib.predicates;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -14,7 +14,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.blockpredicate.BlockPredicate;
 import net.minecraft.world.gen.blockpredicate.BlockPredicateType;
 import net.minecraft.world.gen.structure.Structure;
-import athebyne.exclusions_lib.*;
+import net.athebyne.exclusions_lib.*;
 import java.util.Optional;
 
 

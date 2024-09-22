@@ -8,14 +8,14 @@
     "Athebyne"
   ],
   "contact": {
-    "repo": "https://github.com/monke/exclusions-lib"
+    "repo": "https://github.com/f-raz0r/exclusionslib"
   },
   "license": "CC-BY-4.0",
   "icon": "assets/exclusions_lib/icon.png",
   "environment": "server",
   "entrypoints": {
     "main": [
-      "athebyne.exclusions_lib.ExclusionsLib"
+      "net.athebyne.exclusions_lib.ExclusionsLib"
     ]
   },
   "mixins": [

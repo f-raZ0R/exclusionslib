@@ -6,6 +6,10 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+base {
+    archivesName = project.archives_base_name
+}
+
 repositories {
     // Add repositories to retrieve artifacts from in here.
     // You should only use this when depending on other mods because
@@ -71,6 +75,7 @@ jar {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            artifactId = project.archives_base_name
             from components.java
         }
     }
