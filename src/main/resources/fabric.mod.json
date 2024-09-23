@@ -12,7 +12,7 @@
   },
   "license": "CC-BY-4.0",
   "icon": "assets/exclusions_lib/icon.png",
-  "environment": "server",
+  "environment": "*",
   "entrypoints": {
     "main": [
       "net.athebyne.exclusions_lib.ExclusionsLib"
