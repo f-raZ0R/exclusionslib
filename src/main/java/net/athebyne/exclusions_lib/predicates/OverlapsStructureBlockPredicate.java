@@ -18,45 +18,40 @@ import net.minecraft.world.gen.structure.Structure;
 import net.athebyne.exclusions_lib.*;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 
 public class OverlapsStructureBlockPredicate implements BlockPredicate {
 
     public static final Codec<OverlapsStructureBlockPredicate> CODEC = RecordCodecBuilder.create((instance) -> instance.group(Vec3i.createOffsetCodec(16).optionalFieldOf("offset", BlockPos.ORIGIN).forGetter((predicate) -> predicate.offset),
-            RegistryCodecs.entryList(RegistryKeys.STRUCTURE).optionalFieldOf("structures").forGetter((predicate) -> predicate.structures),
+            RegistryCodecs.entryList(RegistryKeys.STRUCTURE).optionalFieldOf("structures").forGetter(OverlapsStructureBlockPredicate::structure),
             Codec.intRange(0, 32).optionalFieldOf("range", 0).forGetter((predicate) -> predicate.range)).apply(instance, OverlapsStructureBlockPredicate::new));
 
     private final Vec3i offset;
     private final int range;
-    private final Optional<RegistryEntryList<Structure>> structures;
+    private final Optional<RegistryEntryList<Structure>> rawStructures;
+    private final Optional<List<Structure>> structures;
     public OverlapsStructureBlockPredicate(Vec3i offset,  Optional<RegistryEntryList<Structure>> structures, int range) {
-        this.structures = structures;
+        this.rawStructures = structures;
+        if (structures.isEmpty()) {
+            this.structures = Optional.empty();
+        } else {
+            this.structures = Optional.of(structures.get().stream().map(RegistryEntry::value).collect(Collectors.toList()));
+        }
         this.offset = offset;
         this.range = range;
+
     }
     public boolean test(StructureWorldAccess structureWorldAccess, BlockPos blockPos) {
         StructureAccessor accessor = structureWorldAccess.toServerWorld().getStructureAccessor();
-        Registry<Structure> structureKey = accessor.getRegistryManager().get(RegistryKeys.STRUCTURE);
         BlockPos blockPosOffset = blockPos.add(this.offset);
-        List<Structure> targetStructs = new ArrayList<>();
-        if(this.structures.isPresent())
-        {
-            for(RegistryEntry<Structure> entry : this.structures.get())
-            {
-                if(entry.getKey().isPresent())
-                {
-                    targetStructs.add(structureKey.get(entry.getKey().get()));
-                }
-            }
-        }
         BlockBox exclusionZone = new BlockBox(blockPosOffset.getX() - this.range, blockPosOffset.getY() - this.range, blockPosOffset.getZ() - this.range,blockPosOffset.getX() + this.range, blockPosOffset.getY() + this.range, blockPosOffset.getZ() + this.range);
         for(var struct : accessor.getStructureReferences(blockPosOffset).entrySet())
         {
-            if(!targetStructs.isEmpty() && !targetStructs.contains(struct.getKey()))
+            if(this.structures.isPresent() && !this.structures.get().contains(struct.getKey()))
             {
                 continue;
             }
@@ -81,6 +76,10 @@ public class OverlapsStructureBlockPredicate implements BlockPredicate {
             }
         }
         return false;
+    }
+
+    public Optional<RegistryEntryList<Structure>> structure() {
+        return rawStructures;
     }
 
     public BlockPredicateType<?> getType() {
