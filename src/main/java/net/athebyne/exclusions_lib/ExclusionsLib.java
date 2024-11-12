@@ -14,7 +14,6 @@ public class ExclusionsLib implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Exclusions Lib");
     @Override
     public void onInitialize() {
-        LOGGER.info("HI THE MOD HAS LOADED");
         OVERLAPS_STRUCTURE = Registry.register(Registries.BLOCK_PREDICATE_TYPE, new Identifier(MOD_ID, "overlaps_structure"), () -> OverlapsStructureBlockPredicate.CODEC);
 
     }

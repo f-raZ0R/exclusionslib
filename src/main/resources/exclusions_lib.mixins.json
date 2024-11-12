@@ -1,9 +1,11 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "athebyne.exclusions_lib.mixin",
+  "package": "net.athebyne.exclusions_lib.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "TagEntryMixin",
+    "TagGroupLoaderMixin"
   ],
   "client": [
   ],
