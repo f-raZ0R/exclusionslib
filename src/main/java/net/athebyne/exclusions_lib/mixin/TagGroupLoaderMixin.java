@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-@Mixin(value = TagGroupLoader.class, remap = false)
+@Mixin(value = TagGroupLoader.class)
 public class TagGroupLoaderMixin {
 
     @WrapOperation(

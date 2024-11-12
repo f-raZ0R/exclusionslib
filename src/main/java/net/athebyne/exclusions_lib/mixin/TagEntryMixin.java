@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.Objects;
 import java.util.function.Function;
 
-@Mixin(value = TagEntry.class, remap = false)
+@Mixin(value = TagEntry.class)
 public abstract class TagEntryMixin implements TagEntryExclusionHolder {
 
     @Final
