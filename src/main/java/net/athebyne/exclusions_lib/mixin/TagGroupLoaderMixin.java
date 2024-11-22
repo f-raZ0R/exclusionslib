@@ -12,6 +12,8 @@ import net.minecraft.registry.tag.TagGroupLoader;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -21,11 +23,12 @@ import java.util.function.Consumer;
 @Mixin(value = TagGroupLoader.class)
 public class TagGroupLoaderMixin {
 
-    @WrapOperation(
+    @Inject(
             method = "resolveAll(Lnet/minecraft/registry/tag/TagEntry$ValueGetter;Ljava/util/List;)Lcom/mojang/datafixers/util/Either;",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/registry/tag/TagEntry;resolve(Lnet/minecraft/registry/tag/TagEntry$ValueGetter;Ljava/util/function/Consumer;)Z", ordinal = 0)
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/registry/tag/TagEntry;resolve(Lnet/minecraft/registry/tag/TagEntry$ValueGetter;Ljava/util/function/Consumer;)Z", ordinal = 0),
+            cancellable = true
     )
-    private <T> boolean exclusionsLib$removeEntry(TagEntry entry, TagEntry.ValueGetter<T> valueGetter,  Consumer<T> idConsumer, Operation<Boolean> original, TagEntry.ValueGetter<T> valueGetter1, List<TagGroupLoader.TrackedEntry> entries, @Local LocalRef<ImmutableSet.Builder<T>> builder)
+    private <T> void exclusionsLib$removeEntry(CallbackInfoReturnable<Boolean> cir, TagEntry entry, TagEntry.ValueGetter<T> valueGetter,  Consumer<T> idConsumer, Operation<Boolean> original, TagEntry.ValueGetter<T> valueGetter1, List<TagGroupLoader.TrackedEntry> entries, @Local LocalRef<ImmutableSet.Builder<T>> builder)
     {
         if(((TagEntryExclusionHolder)entry).exclusionsLib$isExcluded())
         {
@@ -37,7 +40,8 @@ public class TagGroupLoaderMixin {
             {
                 Collection<T> collection = valueGetter.tag(id);
                 if (collection == null) {
-                    return !required;
+                    cir.setReturnValue(!required);
+                    return;
                 }
                 list.removeAll(collection);
             }
@@ -45,16 +49,14 @@ public class TagGroupLoaderMixin {
             {
                 T object = valueGetter.direct(id);
                 if (object == null) {
-                    return !required;
+                    cir.setReturnValue(!required);
+                    return;
                 }
                 list.removeAll(Collections.singleton(object));
             }
             builder.set(new ImmutableSet.Builder<T>().addAll(list));
-            return true;
-        }
-        else
-        {
-            return original.call(entry,valueGetter,idConsumer);
+            cir.setReturnValue(true);
+            return;
         }
     }
 
