@@ -1,0 +1,18 @@
+
+modLoader = "javafml"
+loaderVersion = "[46,)"
+issueTrackerURL = "https://github.com/f-raZ0R/exclusionslib/issues"
+license = "CC-BY-4.0"
+
+[[mods]]
+modId = "exclusions_lib"
+version = "1.0.2"
+displayName = "Exclusions Lib"
+# updateJSONURL=""
+displayURL = "https://github.com/f-raZ0R/exclusionslib"
+logoFile = "icon.png"
+logoBlur = false
+authors = "Athebyne"
+description = "A library for Excluding Things from other Things."
+
+
