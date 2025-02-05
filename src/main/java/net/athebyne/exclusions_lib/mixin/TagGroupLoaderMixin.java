@@ -1,6 +1,5 @@
 package net.athebyne.exclusions_lib.mixin;
 
-import com.google.common.collect.ImmutableSet;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -15,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -25,12 +25,12 @@ public class TagGroupLoaderMixin {
             method = "resolveAll(Lnet/minecraft/registry/tag/TagEntry$ValueGetter;Ljava/util/List;)Lcom/mojang/datafixers/util/Either;",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/registry/tag/TagEntry;resolve(Lnet/minecraft/registry/tag/TagEntry$ValueGetter;Ljava/util/function/Consumer;)Z", ordinal = 0)
     )
-    private <T> boolean exclusionsLib$removeEntry(TagEntry entry, TagEntry.ValueGetter<T> valueGetter,  Consumer<T> idConsumer, Operation<Boolean> original, TagEntry.ValueGetter<T> valueGetter1, List<TagGroupLoader.TrackedEntry> entries, @Local LocalRef<ImmutableSet.Builder<T>> builder)
+    private <T> boolean exclusionsLib$removeEntry(TagEntry entry, TagEntry.ValueGetter<T> valueGetter,  Consumer<T> idConsumer, Operation<Boolean> original, TagEntry.ValueGetter<T> valueGetter1, List<TagGroupLoader.TrackedEntry> entries, @Local LocalRef<LinkedHashSet<T>> builder)
     {
         if(((TagEntryExclusionHolder)entry).exclusionsLib$isExcluded())
         {
             ExclusionsLib.LOGGER.info("[Exclusions Lib] The Following Tag has been detected: " + entry);
-            List<T> list = new java.util.ArrayList<>(builder.get().build().stream().toList());
+            List<T> list = new java.util.ArrayList<>(builder.get().stream().toList());
             Identifier id = ((TagEntryExclusionHolder)entry).exclusionsLib$getId();
             boolean required = ((TagEntryExclusionHolder)entry).exclusionsLib$isRequired();
             if(((TagEntryExclusionHolder)entry).exclusionsLib$isTag())
@@ -49,7 +49,7 @@ public class TagGroupLoaderMixin {
                 }
                 list.removeAll(Collections.singleton(object));
             }
-            builder.set(new ImmutableSet.Builder<T>().addAll(list));
+            builder.set(new LinkedHashSet<T>(list));
             return true;
         }
         else

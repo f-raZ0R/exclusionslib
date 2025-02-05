@@ -2,7 +2,6 @@ package net.athebyne.exclusions_lib.predicates;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryCodecs;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -83,7 +82,7 @@ public class OverlapsStructureBlockPredicate implements BlockPredicate {
     }
 
     public BlockPredicateType<?> getType() {
-        return ExclusionsLib.OVERLAPS_STRUCTURE;
+        return ExclusionsLib.OVERLAPS_STRUCTURE.get();
     }
 
 }
