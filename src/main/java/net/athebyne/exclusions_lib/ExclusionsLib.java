@@ -16,7 +16,7 @@ public class ExclusionsLib {
     static final DeferredRegister<BlockPredicateType<?>> BLOCK_PREDICATE_TYPE = DeferredRegister.create(Registries.BLOCK_PREDICATE_TYPE.getKey(), MOD_ID);
     public static RegistryObject<BlockPredicateType<?>> OVERLAPS_STRUCTURE = BLOCK_PREDICATE_TYPE.register("overlaps_structure", () -> (BlockPredicateType) () -> OverlapsStructureBlockPredicate.CODEC);
 
-    public ExclusionsLib(FMLJavaModLoadingContext context) {
-        BLOCK_PREDICATE_TYPE.register(context.getModEventBus());
+    public ExclusionsLib() {
+        BLOCK_PREDICATE_TYPE.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 }

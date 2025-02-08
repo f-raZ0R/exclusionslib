@@ -11,5 +11,6 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "plugin": "net.athebyne.exclusions_lib.extensions.MixinPlugin"
 }
