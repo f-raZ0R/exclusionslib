@@ -3,16 +3,16 @@ package net.athebyne.exclusions_lib.predicates;
 import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.athebyne.exclusions_lib.ExclusionsLib;
-import net.minecraft.registry.*;
-import net.minecraft.registry.entry.*;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.structure.*;
-import net.minecraft.util.math.*;
-import net.minecraft.world.StructureWorldAccess;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.gen.StructureAccessor;
-import net.minecraft.world.gen.blockpredicate.*;
-import net.minecraft.world.gen.structure.Structure;
+import net.minecraft.core.registries.*;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.levelgen.structure.*;
+import net.minecraft.core.*;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.levelgen.blockpredicates.*;
+import net.minecraft.world.level.levelgen.structure.Structure;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -25,8 +25,8 @@ public class OverlapsStructureBlockPredicate implements BlockPredicate {
     public static final MapCodec<OverlapsStructureBlockPredicate> CODEC = RecordCodecBuilder.mapCodec(
             (instance) ->
                     instance.group(
-                            Vec3i.createOffsetCodec(16).optionalFieldOf("offset", BlockPos.ORIGIN).forGetter((predicate) -> predicate.offset),
-                            RegistryCodecs.entryList(RegistryKeys.STRUCTURE).optionalFieldOf("structures").forGetter(OverlapsStructureBlockPredicate::structure),
+                            Vec3i.offsetCodec(16).optionalFieldOf("offset", BlockPos.ZERO).forGetter((predicate) -> predicate.offset),
+                            RegistryCodecs.homogeneousList(Registries.STRUCTURE).optionalFieldOf("structures").forGetter(OverlapsStructureBlockPredicate::structure),
                             Codec.intRange(0, 32).optionalFieldOf("range", 0).forGetter((predicate) -> predicate.range)
                     ).apply(instance, OverlapsStructureBlockPredicate::new)
     );
@@ -36,55 +36,55 @@ public class OverlapsStructureBlockPredicate implements BlockPredicate {
     private final List<Structure> structures;
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private final Optional<RegistryEntryList<Structure>> rawStructures;
+    private final Optional<HolderSet<Structure>> rawStructures;
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public OverlapsStructureBlockPredicate(Vec3i offset, Optional<RegistryEntryList<Structure>> structures, int range) {
+    public OverlapsStructureBlockPredicate(Vec3i offset, Optional<HolderSet<Structure>> structures, int range) {
         this.rawStructures = structures;
         this.structures = structures
-                .map(s -> s.stream().map(RegistryEntry::value).collect(Collectors.toList()))
+                .map(s -> s.stream().map(Holder::value).collect(Collectors.toList()))
                 .orElse(null);
         this.offset = offset;
         this.range = range;
 
     }
     
-    public boolean test(StructureWorldAccess structureWorldAccess, BlockPos blockPos) {
-        ServerWorld world = structureWorldAccess.toServerWorld();
-        StructureAccessor accessor = world.getStructureAccessor();
-        BlockPos blockPosOffset = blockPos.add(this.offset);
+    public boolean test(WorldGenLevel worldGenLevel, BlockPos blockPos) {
+        ServerLevel world = worldGenLevel.getLevel();
+        StructureManager accessor = world.structureManager();
+        BlockPos blockPosOffset = blockPos.offset(this.offset);
         Predicate<StructureStart> predicate = makePredicate(blockPosOffset);
-        for (var struct : accessor.getStructureReferences(blockPosOffset).entrySet()) {
+        for (var struct : accessor.getAllStructuresAt(blockPosOffset).entrySet()) {
             if (this.structures != null && !this.structures.contains(struct.getKey())) continue;
             for (long pos : struct.getValue()) {
-                ChunkSectionPos sectionPos = ChunkSectionPos.from(new ChunkPos(pos), world.getBottomSectionCoord());
-                StructureStart start = accessor.getStructureStart(
-                        sectionPos, struct.getKey(), world.getChunk(sectionPos.getSectionX(), sectionPos.getSectionZ(), ChunkStatus.STRUCTURE_STARTS)
+                SectionPos sectionPos = SectionPos.of(new ChunkPos(pos), world.getMinSection());
+                StructureStart start = accessor.getStartForStructure(
+                        sectionPos, struct.getKey(), world.getChunk(sectionPos.x(), sectionPos.z(), ChunkStatus.STRUCTURE_STARTS)
                 );
-                if (start != null && start.hasChildren() && predicate.test(start)) return true;
+                if (start != null && start.isValid() && predicate.test(start)) return true;
             }
         }
         return false;
     }
 
     private @NotNull Predicate<StructureStart> makePredicate(BlockPos blockPosOffset) {
-        final BlockBox exclusionZone = new BlockBox(
+        final BoundingBox exclusionZone = new BoundingBox(
                 blockPosOffset.getX() - this.range, blockPosOffset.getY() - this.range, blockPosOffset.getZ() - this.range,
                 blockPosOffset.getX() + this.range, blockPosOffset.getY() + this.range, blockPosOffset.getZ() + this.range
         );
 	    return start -> {
-	        for (StructurePiece piece : start.getChildren())
+	        for (StructurePiece piece : start.getPieces())
 	            if (piece.getBoundingBox().intersects(exclusionZone)) return true;
 	        return false;
 	    };
     }
 
-    public Optional<RegistryEntryList<Structure>> structure() {
+    public Optional<HolderSet<Structure>> structure() {
         return rawStructures;
     }
 
-    public BlockPredicateType<?> getType() {
-        return ExclusionsLib.OVERLAPS_STRUCTURE;
+    public BlockPredicateType<?> type() {
+        return ExclusionsLib.OVERLAPS_STRUCTURE.get();
     }
 
 }
