@@ -26,24 +26,18 @@ public class OverlapsStructureBlockPredicate implements BlockPredicate {
             (instance) ->
                     instance.group(
                             Vec3i.offsetCodec(16).optionalFieldOf("offset", BlockPos.ZERO).forGetter((predicate) -> predicate.offset),
-                            RegistryCodecs.homogeneousList(Registries.STRUCTURE).optionalFieldOf("structures").forGetter(OverlapsStructureBlockPredicate::structure),
+                            RegistryCodecs.homogeneousList(Registries.STRUCTURE).optionalFieldOf("structures", HolderSet.empty()).forGetter(OverlapsStructureBlockPredicate::structure),
                             Codec.intRange(0, 32).optionalFieldOf("range", 0).forGetter((predicate) -> predicate.range)
                     ).apply(instance, OverlapsStructureBlockPredicate::new)
     );
 
     private final Vec3i offset;
     private final int range;
-    private final List<Structure> structures;
+    private final HolderSet<Structure> structures;
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    private final Optional<HolderSet<Structure>> rawStructures;
-
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public OverlapsStructureBlockPredicate(Vec3i offset, Optional<HolderSet<Structure>> structures, int range) {
-        this.rawStructures = structures;
-        this.structures = structures
-                .map(s -> s.stream().map(Holder::value).collect(Collectors.toList()))
-                .orElse(null);
+    public OverlapsStructureBlockPredicate(Vec3i offset, HolderSet<Structure> structures, int range) {
+        this.structures = structures;
         this.offset = offset;
         this.range = range;
 
@@ -55,7 +49,7 @@ public class OverlapsStructureBlockPredicate implements BlockPredicate {
         BlockPos blockPosOffset = blockPos.offset(this.offset);
         Predicate<StructureStart> predicate = makePredicate(blockPosOffset);
         for (var struct : accessor.getAllStructuresAt(blockPosOffset).entrySet()) {
-            if (this.structures != null && !this.structures.contains(struct.getKey())) continue;
+            if (this.structures.size()!=0 && !this.structures.contains(worldGenLevel.registryAccess().registryOrThrow(Registries.STRUCTURE).wrapAsHolder(struct.getKey()))) continue;
             for (long pos : struct.getValue()) {
                 SectionPos sectionPos = SectionPos.of(new ChunkPos(pos), world.getMinSection());
                 StructureStart start = accessor.getStartForStructure(
@@ -79,8 +73,8 @@ public class OverlapsStructureBlockPredicate implements BlockPredicate {
 	    };
     }
 
-    public Optional<HolderSet<Structure>> structure() {
-        return rawStructures;
+    public HolderSet<Structure> structure() {
+        return structures;
     }
 
     public BlockPredicateType<?> type() {
