@@ -29,7 +29,7 @@ cloche {
     metadata {
         modId = "exclusions_lib"
         name = "Exclusions Lib"
-        version = "1.0.2-NEO"
+        version = "1.1.0-NEO"
         license = "CC-BY-4.0"
         description = "Nothing Besides Remains."
         author("Athebyne")
